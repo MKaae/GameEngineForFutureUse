@@ -1,0 +1,188 @@
+body, html {
+    height: 100%;
+    width: 100%;
+    margin: 0; 
+    padding: 0;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: grey;
+    height: 100%;
+}
+
+#gamefield {
+    border: 1px solid greenyellow;
+    width: fit-content;
+    display: grid;
+}
+
+#background {
+    grid-area: 1/1;
+    display: grid;
+    grid-template-columns: repeat(var(--GRID_WIDTH), max-content);
+}
+
+#background .tile {
+    width: var(--TILE_SIZE);
+    aspect-ratio: 1 / 1;
+    background-repeat: no-repeat;
+    background-size: 100%;
+    image-rendering: pixelated;
+
+}
+
+.tile.path {
+    background-image: url('./images/tiles/path.png')
+}
+
+.tile.grass {
+    background-image: url('./images/tiles/grass.png')
+}
+
+.tile.water {
+    background-image: url('./images/tiles/water.png')
+}
+
+.tile.tree {
+    background-image: url('./images/tiles/tree.png')
+}
+
+.tile.flower {
+    background-image: url('./images/tiles/flowers.png')
+}
+
+.tile.planks {
+    background-image: url('./images/tiles/floor_planks.png')
+}
+
+.tile.housewall {
+    background-image: url('./images/tiles/redwall.png')
+}
+
+.tile.pot {
+    background-image: url('./images/items/pot.png')
+}
+
+.tile.floor {
+    background-image: url('./images/tiles/floor_wood.png')
+}
+
+.tile.door {
+    background-image: url('./images/tiles/door.png')
+}
+
+.tile.fencehor {
+    background-image: url('./images/tiles/fence_hori.png')
+}
+
+.tile.fencever {
+    background-image: url('./images/tiles/fence_vert.png')
+}
+
+.tile.gold {
+    background-image: url('./images/items/gold.png')
+}
+
+.tile.chest {
+    background-image: url('./images/items/chest_closed.png')
+}
+
+#items {
+    grid-area: 1/1;
+}
+
+#characters {
+    grid-area: 1/1;
+}
+
+#player {
+    width: 24px;
+    aspect-ratio: 16/20;
+    background-image: url('images/characters/Character\ 5.png');
+    background-size: 400% 400%;
+    image-rendering: pixelated;
+}
+
+#player.animate {
+    animation-duration: 1s;
+    animation-timing-function: steps(4);
+    animation-iteration-count: infinite;
+}
+
+#player.down {
+    background-position: 0% 0%;
+    animation-name: down;
+}
+
+@keyframes down {
+    from {
+        background-position: 0% 0%;
+    }
+    to {
+        background-position: 400% 0%;
+    }
+}
+
+#player.up {
+    background-position: 0% -100%;
+    animation-name: up;
+}
+
+@keyframes up {
+    from {
+        background-position: 0% -100%;
+    }
+    to {
+        background-position: 400% -100%;
+    }
+}
+
+#player.left {
+    background-position: 0% -200%;
+    animation-name: left;
+}
+
+@keyframes left {
+    from {
+        background-position: 0% -200%;
+    }
+    to {
+        background-position: 400% -200%;
+    }
+}
+
+#player.right {
+    background-position: 0% -300%;
+    animation-name: right;
+}
+
+@keyframes right {
+    from {
+        background-position: 0% -300%;
+    }
+    to {
+        background-position: 400% -300%;
+    }
+}
+
+.highlight {
+    outline: 2px dashed yellow;
+    translate: 0 0;
+}
+
+.show-rect {
+    outline: 2px solid red;
+}
+
+.show-reg-point::before {
+    content: "";
+    position: absolute;
+    background-color: cyan;
+    width: 3px;
+    height: 3px;
+    translate: var(--regX) var(--regY);
+}
