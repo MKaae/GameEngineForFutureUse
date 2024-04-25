@@ -1,15 +1,15 @@
 let lastTimestamp = 0;
 
 const player = {
-    x: 0,
-    y: 0,
+    x: 14,
+    y: 14,
     regX: 11,
     regY: 12,
     hitbox: {
-        x: 4,
-        y: 7,
-        w: 12,
-        h: 17,
+        x: 6,
+        y: 13,
+        w: 11,
+        h: 13,
     },
     speed: 120,
     moving: false,
@@ -17,23 +17,52 @@ const player = {
 }
 
 const tiles = [
-    [1,3,4,0,4,3,4,12,6,6,6,6,6,1,0,7],
-    [1,0,0,0,0,0,0,0,6,7,13,7,6,5,2,2],
+    [1,3,4,0,4,3,0,0,6,6,6,6,6,1,0,0],
+    [1,0,0,0,0,0,0,0,6,8,8,8,6,5,2,2],
     [1,0,4,3,4,0,4,3,6,8,8,8,6,1,0,4],
     [1,1,1,1,1,1,1,1,6,8,8,8,6,1,4,0],
-    [0,4,0,0,0,0,4,1,6,7,8,7,6,1,0,0],
+    [0,4,0,0,0,0,4,1,6,8,8,8,6,1,0,0],
     [0,0,0,4,0,0,0,1,6,6,9,6,6,1,0,0],
     [0,3,3,3,0,3,0,1,11,4,0,4,11,1,0,4],
-    [4,3,13,3,0,3,4,1,11,3,0,3,11,1,4,0],
+    [4,3,0,3,0,3,4,1,11,3,0,3,11,1,4,0],
     [0,3,0,3,0,3,0,1,1,1,1,1,1,1,1,1],
     [4,3,0,0,0,3,0,1,2,2,2,1,0,4,0,4],
     [0,3,3,3,3,3,0,1,2,3,2,5,2,2,2,2],
-    [12,4,0,0,0,0,4,1,2,2,2,1,4,0,0,4]
+    [0,4,0,0,0,0,4,1,2,2,2,1,4,0,0,4]
 ];
+
+const item = [
+    {type: "gold", row: 0, col: 7, pickedUp: false},
+    {type: "gold", row: 0, col: 15, pickedUp: false},
+]
+
+const enemies = [
+    {type: "ghost", row: 5, col: 8, alive: true},
+    {type: "ghost", row: 12, col: 6, alive: true}
+]
 
 const GRID_HEIGHT = tiles.length;
 const GRID_WIDTH = tiles[0].length;
 const TILE_SIZE = 32;
+
+function displayItems() {
+    const itemsContainer = document.getElementById("items");
+    itemsContainer.innerHTML = "";
+    itemsContainer.style.setProperty("--GRID_WIDTH", GRID_WIDTH);
+    itemsContainer.style.setProperty("--GRID_HEIGHT", GRID_HEIGHT);
+    itemsContainer.style.setProperty("--TILE_SIZE", TILE_SIZE+"px");
+
+    item.forEach((item) => {
+        if (!item.pickedUp) {
+            const itemDiv = document.createElement("div");
+            itemDiv.classList.add("item", item.type);
+            itemDiv.style.gridRowStart = item.row + 1;
+            itemDiv.style.gridColumnStart = item.col + 1;
+            itemsContainer.appendChild(itemDiv);
+        }
+    })
+}
+
 
 function getTileCoord( {row, col} ){
     return tiles[row][col];
@@ -99,6 +128,7 @@ function start() {
     requestAnimationFrame(tick);
     createTiles();
     displayTiles();
+    displayItems();
 }
 
 function displayPlayerAtPosition() {
@@ -142,10 +172,25 @@ function posFromCoord( {row, col} ){
 
 }
 
-function getTilesUnderPlayer( player ){
-    const tiles = [];
-    const topLeft = {x: player.x - player.regX + player.hitbox.x, y: player.y - player.regY};
-    const topRight = {x: player.x - player.regX + player.hitbox.x, y: player.y - player.regY};
+function getTilesUnderPlayer( player, newPos={x:player.x, y:player.y} ){
+    const tileCoords = [];
+
+    const topLeft = {x: newPos.x - player.regX + player.hitbox.x, y: newPos.y - player.regY + player.hitbox.y}
+    const topRight = {x: topLeft.x + player.hitbox.w, y: topLeft.y}
+    const bottomLeft = {x: topLeft.x, y: topLeft.y + player.hitbox.h}
+    const bottomRight = {x: topLeft.x + player.hitbox.w, y: topLeft.y + player.hitbox.h}
+
+    const topLeftCoords = coordsFromPos(topLeft);
+    const topRightCoords = coordsFromPos(topRight);
+    const bottomLeftCoords = coordsFromPos(bottomLeft);
+    const bottomRightCoords = coordsFromPos(bottomRight);
+
+    tileCoords.push(topLeftCoords);
+    tileCoords.push(topRightCoords);
+    tileCoords.push(bottomLeftCoords);
+    tileCoords.push(bottomRightCoords);
+
+    return tileCoords;
 }
 
 function movePlayer(deltaTime) {
@@ -176,7 +221,7 @@ function movePlayer(deltaTime) {
         newPos.y += player.speed * deltaTime;
     }
     
-    if(canMoveTo(newPos)){
+    if(canMovePlayerToPos(player, newPos)){
         player.x = newPos.x;
         player.y = newPos.y;
     } else {
@@ -189,12 +234,12 @@ function movePlayer(deltaTime) {
             x: player.x,
             y: newPos.y
         }
-        if(canMoveTo(newXpos)){
+        if(canMovePlayerToPos(player, newXpos)){
             player.moving = true;
             player.x = newPos.x;
             player.y = player.y;
         }
-        if(canMoveTo(newYpos)) {
+        if(canMovePlayerToPos(player, newYpos)) {
             player.moving = true;
             player.x = player.x;
             player.y = newPos.y;
@@ -202,10 +247,13 @@ function movePlayer(deltaTime) {
     } 
 }
 
-function canMoveTo(newPos){
-    const {row, col} = coordsFromPos(newPos);
-    if(row < 0 || row >= GRID_HEIGHT ||
-       col < 0 || col >= GRID_WIDTH){
+function canMovePlayerToPos(player, pos){
+    const coords = getTilesUnderPlayer(player, pos);
+    return coords.every(canMoveTo);
+}
+
+function canMoveTo({row, col}){
+    if(row < 0 || row >= GRID_HEIGHT || col < 0 || col >= GRID_WIDTH){
        return false;
     } 
     const tileType = getTileCoord( {row, col} );
@@ -216,6 +264,7 @@ function canMoveTo(newPos){
         case 3: return false; break;
         case 6: return false; break;
         case 7: return false; break;
+        case 9: return false; break;
         case 10: return false; break;
         case 11: return false; break;
         case 12: return false; break;
@@ -263,23 +312,22 @@ function changeDirectionDown(newInput) {
 }   
 
 function showDebugging(){
-    showDebugTileUnderPlayer();
+    showDebugTilesUnderPlayer();
     showDebugPlayerRect();
     showDebugRegistrationPoint();
+    showDebugPlayerHitbox();
 }
 
 
-let lastPlayerCoord = {row: 0, col: 0};
+let highlightedTiles = [];
 
-function showDebugTileUnderPlayer(){
-    const coord = coordsFromPos(player);
-    
-    if(coord.row != lastPlayerCoord.row || coord.col != lastPlayerCoord.col){
-        unHighlightTile(lastPlayerCoord);
-        highlightTile(coord);
-    }
-    
-    lastPlayerCoord = coord;
+function showDebugTilesUnderPlayer(){
+    highlightedTiles.forEach(unHighlightTile);
+
+    const tileCoords = getTilesUnderPlayer(player);
+    tileCoords.forEach(highlightTile);
+
+    highlightedTiles = tileCoords;
 }
 
 function highlightTile( {row, col} ) {
@@ -310,4 +358,15 @@ function showDebugRegistrationPoint(){
     if(!visualPlayer.classList.contains('show-reg-point')){
         visualPlayer.classList.add('show-reg-point');
     }
+}
+
+function showDebugPlayerHitbox() {
+    const visualPlayer = document.getElementById('player');
+    if(!visualPlayer.classList.contains('show-hitbox')){
+        visualPlayer.classList.add('show-hitbox');
+    }
+    visualPlayer.style.setProperty("--hitboxX", player.hitbox.x + "px");
+    visualPlayer.style.setProperty("--hitboxY", player.hitbox.y + "px");
+    visualPlayer.style.setProperty("--hitboxW", player.hitbox.w + "px");
+    visualPlayer.style.setProperty("--hitboxH", player.hitbox.h + "px");
 }

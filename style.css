@@ -186,3 +186,40 @@ main {
     height: 3px;
     translate: var(--regX) var(--regY);
 }
+
+#items {
+    grid-area: 1/1;
+    top: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: repeat(var(--GRID_WIDTH), var(--TILE_SIZE));
+    grid-template-rows: repeat(var(--GRID_HEIGHT), var(--TILE_SIZE));
+    image-rendering: pixelated;
+    z-index: 1;
+  }
+  
+  .item {
+    width: var(--TILE_SIZE);
+    height: var(--TILE_SIZE);
+    aspect-ratio: 1/1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-size: cover; 
+    background-position: center;
+    translate: 0, 0;
+  }
+  
+  .item.gold {
+    background-image: url("./images/items/gold.png");
+  }
+
+  .show-hitbox::after {
+    content: "";
+    position: absolute;
+    width: var(--hitboxW);
+    height: var(--hitboxH);
+    translate: var(--hitboxX) var(--hitboxY);
+
+    outline: 2px solid hotpink;
+  }
